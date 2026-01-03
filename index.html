@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moda FW Express - Frederico Westphalen</title>
+
+    <style>
+        :root { 
+            --cor-principal: #0088cc; 
+            --cor-preto: #1a1a1a; 
+            --cor-whats: #25d366; 
+            --sombra: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding-bottom: 120px;
+            background: #f0f2f5;
+        }
+
+        header { 
+            background: var(--cor-preto); color: white; padding: 25px 20px; 
+            text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; padding: 5px 15px; border-radius: 20px;
+            background: rgba(255,255,255,0.1); margin-top: 10px;
+        }
+        .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
+        .dot-open { background-color: #25d366; box-shadow: 0 0 8px #25d366; }
+        .dot-closed { background-color: #ff4b2b; box-shadow: 0 0 8px #ff4b2b; }
+
+        .container { max-width: 900px; margin: auto; padding: 15px; }
+        
+        h2 { 
+            border-left: 5px solid var(--cor-principal); padding: 10px 15px; 
+            margin: 30px 0 15px; color: #2c3e50; background: white; 
+            border-radius: 5px; font-size: 1.1rem; box-shadow: var(--sombra);
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+        .card { 
+            background: white; padding: 10px; border-radius: 15px; 
+            box-shadow: var(--sombra); text-align: center; 
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 12px; background: #f9f9f9; }
+        .card h3 { font-size: 13px; color: #444; margin: 10px 0; height: 35px; overflow: hidden; line-height: 1.2; }
+        .card p { color: var(--cor-principal); font-weight: 800; font-size: 17px; margin: 5px 0; }
+
+        select, input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; box-sizing: border-box; }
+
+        .btn-add { 
+            background: var(--cor-preto); color: white; border: none; padding: 12px; 
+            border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; 
+            text-transform: uppercase; font-size: 11px;
+        }
+
+        .btn-carrinho { 
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
+            background: var(--cor-principal); color: white; padding: 20px; 
+            border-radius: 50px; font-weight: bold; width: 85%; max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,136,204,0.5); z-index: 99; border:none; cursor: pointer;
+        }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; backdrop-filter: blur(5px); overflow-y: auto; }
+        .modal-content { background: white; width: 92%; max-width: 450px; margin: 40px auto; padding: 25px; border-radius: 25px; box-sizing: border-box; }
+
+        .btn-whats { display: block; background: var(--cor-whats); color: white; padding: 18px; border-radius: 15px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 15px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+
+        @media (min-width: 600px) { .grid { grid-template-columns: repeat(3, 1fr); } .card img { height: 200px; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>MODA FW EXPRESS</h1>
+    <div class="status-badge">
+        <span id="status-dot" class="dot"></span>
+        <span id="status-text">...</span>
+    </div>
+</header>
+
+<div class="container">
+    <h2>👕 Camisetas (P ao GG)</h2> <div class="grid" id="lista-camisetas"></div>
+    <h2>🩳 Bermudas (P ao GG)</h2> <div class="grid" id="lista-bermudas"></div>
+    <h2>👖 Calças (P ao GG)</h2> <div class="grid" id="lista-calcas"></div>
+    <h2>👟 Tênis (38 ao 43)</h2> <div class="grid" id="lista-tenis"></div>
+</div>
+
+<div id="modal-fechado" class="modal">
+    <div class="modal-content" style="text-align: center;">
+        <h2>🌙 Loja Fechada no Momento</h2>
+        <p>Nosso horário de entregas é das 08:00 às 18:00.</p>
+        <p><b>Não tem problema!</b> Você pode enviar seu pedido agora e agendaremos sua entrega com prioridade.</p>
+        <button onclick="abrirCheckoutDireto()" style="background: var(--cor-principal); color: white; width: 100%; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer;">CONTINUAR E AGENDAR</button>
+        <button onclick="fecharModais()" style="background: none; border: none; color: #999; margin-top: 20px; cursor: pointer;">Voltar</button>
+    </div>
+</div>
+
+<button class="btn-carrinho" onclick="tentarFinalizar()">
+    🛒 FINALIZAR PEDIDO (<span id="cart-count">0</span>)
+</button>
+
+<div id="modal-checkout" class="modal">
+    <div class="modal-content" id="conteudo-checkout">
+        <h3 style="margin-top:0">Resumo da sua Compra</h3>
+        <div id="resumo-itens" style="background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 15px; font-size: 14px;"></div>
+        
+        <input type="text" id="nome" placeholder="Seu Nome">
+        <input type="tel" id="telefone" placeholder="Seu WhatsApp">
+        <input type="text" id="endereco" placeholder="Endereço (Rua, Número e Bairro)">
+        
+        <select id="pagamento">
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão">Cartão na entrega</option>
+            <option value="Pix">Pix na entrega</option>
+        </select>
+
+        <button id="btnFinalizar" onclick="enviarPedido()" style="background: var(--cor-principal); color: white; width: 100%; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; font-size: 16px;">CONFIRMAR PEDIDO</button>
+        <button onclick="fecharModais()" style="background: none; border: none; color: #999; width: 100%; margin-top: 10px; cursor: pointer;">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    const MEU_WHATSAPP = "55999458792";
+    const TELEGRAM_TOKEN = "8297388614:AAE1Sk0wJb184EmVTL2FMj-SeXzFdXNhCcM";
+    const TELEGRAM_CHAT_ID = "8169265612";
+    
+    let carrinho = [];
+
+    const produtos = {
+        camisetas: [{ nome: "Camiseta Reserva", preco: 79.90, img: "foto1.jpg" }],
+        bermudas: [{ nome: "Bermuda Jeans", preco: 99.90, img: "foto2.jpg" }],
+        calcas: [{ nome: "Calça Skinny", preco: 139.90, img: "foto3.jpg" }],
+        tenis: [{ nome: "Tênis Casual", preco: 189.90, img: "foto4.jpg" }]
+    };
+
+    function verificarHorario() {
+        const hora = new Date().getHours();
+        const dot = document.getElementById('status-dot');
+        const text = document.getElementById('status-text');
+        if (hora >= 8 && hora < 18) {
+            dot.className = "dot dot-open";
+            text.innerText = "Aberto até as 18h";
+            return true;
+        } else {
+            dot.className = "dot dot-closed";
+            text.innerText = "Fechado (Agendando)";
+            return false;
+        }
+    }
+
+    function renderizar() {
+        const gradeRoupas = ['P', 'M', 'G', 'GG'];
+        const gradeTenis = ['38', '39', '40', '41', '42', '43'];
+        const cats = [
+            { id: 'lista-camisetas', lista: produtos.camisetas, tams: gradeRoupas, pref: 'c' },
+            { id: 'lista-bermudas', lista: produtos.bermudas, tams: gradeRoupas, pref: 'b' },
+            { id: 'lista-calcas', lista: produtos.calcas, tams: gradeRoupas, pref: 'ca' },
+            { id: 'lista-tenis', lista: produtos.tenis, tams: gradeTenis, pref: 't' }
+        ];
+        cats.forEach(cat => {
+            const div = document.getElementById(cat.id);
+            cat.lista.forEach((p, i) => {
+                div.innerHTML += `
+                    <div class="card">
+                        <img src="${p.img}" onerror="this.src='https://via.placeholder.com/200?text=FW+MODA'">
+                        <h3>${p.nome}</h3>
+                        <p>R$ ${p.preco.toFixed(2)}</p>
+                        <select id="${cat.pref}${i}">${cat.tams.map(t => `<option>${t}</option>`).join('')}</select>
+                        <button class="btn-add" onclick="add('${p.nome}', ${p.preco}, '${cat.pref}${i}')">Adicionar</button>
+                    </div>`;
+            });
+        });
+    }
+
+    function add(n, p, id) {
+        carrinho.push({ n, p, t: document.getElementById(id).value });
+        document.getElementById('cart-count').innerText = carrinho.length;
+        const btn = document.querySelector(`button[onclick*="${id}"]`);
+        btn.innerText = "✔️ Ok!";
+        setTimeout(() => btn.innerText = "Adicionar", 700);
+    }
+
+    function tentarFinalizar() {
+        if(carrinho.length === 0) return alert("Adicione itens ao carrinho!");
+        if (verificarHorario()) { abrirCheckoutDireto(); } 
+        else { document.getElementById('modal-fechado').style.display = 'block'; }
+    }
+
+    function abrirCheckoutDireto() {
+        fecharModais();
+        document.getElementById('modal-checkout').style.display = 'block';
+        atualizarResumo();
+    }
+
+    function atualizarResumo() {
+        let total = carrinho.reduce((a, b) => a + b.p, 0);
+        let html = carrinho.map(i => `<div style="display:flex; justify-content:space-between"><span>${i.n} (${i.t})</span><b>R$ ${i.p.toFixed(2)}</b></div>`).join('');
+        document.getElementById('resumo-itens').innerHTML = html + `<hr><b>Total: R$ ${total.toFixed(2)}</b>`;
+    }
+
+    function fecharModais() {
+        document.getElementById('modal-checkout').style.display = 'none';
+        document.getElementById('modal-fechado').style.display = 'none';
+    }
+
+    function enviarPedido() {
+        const nome = document.getElementById('nome').value;
+        const tel = document.getElementById('telefone').value;
+        const end = document.getElementById('endereco').value;
+        const pgto = document.getElementById('pagamento').value;
+
+        if(!nome || !tel || !end) return alert("Por favor, preencha seus dados.");
+
+        const btn = document.getElementById('btnFinalizar');
+        btn.innerText = "Enviando...";
+        btn.disabled = true;
+
+        const total = carrinho.reduce((a, b) => a + b.p, 0).toFixed(2);
+        const itensTxt = carrinho.map(i => `• ${i.n} (Tamanho: ${i.t})`).join('\n');
+        const pedidoID = "#FW" + Math.floor(1000 + Math.random() * 9000);
+
+        const mensagem = `🛍️ *NOVO PEDIDO ${pedidoID}*\n\n👤 *Cliente:* ${nome}\n📞 *Whats:* ${tel}\n🏠 *Endereço:* ${end}\n💳 *Pagamento:* ${pgto}\n\n📦 *ITENS:*\n${itensTxt}\n\n💰 *TOTAL:* R$ ${total}`;
+
+        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: mensagem, parse_mode: 'Markdown' })
+        })
+        .then(() => {
+            const msgWhats = encodeURIComponent(`Olá! Fiz o pedido ${pedidoID} no site e gostaria de falar com vocês.`);
+            
+            document.getElementById('conteudo-checkout').innerHTML = `
+                <div style="text-align:center; padding:10px;">
+                    <h2 style="color:var(--cor-whats); margin-bottom:15px;">🛍️ PEDIDO RECEBIDO!</h2>
+                    <p style="font-size:16px;">Já recebemos seu pedido de entrega e <b>estamos preparando tudo</b> para você!</p>
+                    <a href="https://wa.me/${MEU_WHATSAPP}?text=${msgWhats}" class="btn-whats" target="_blank">WHATSAPP DA LOJA</a>
+                    <br>
+                    <button onclick="location.reload()" style="background:none; border:none; color:#999; text-decoration:underline; cursor:pointer; margin-top:20px;">Voltar ao início</button>
+                </div>`;
+        })
+        .catch(() => {
+            alert("Erro ao enviar. Tente novamente.");
+            btn.disabled = false;
+        });
+    }
+
+    window.onload = () => { renderizar(); verificarHorario(); };
+</script>
+</body>
+</html>
